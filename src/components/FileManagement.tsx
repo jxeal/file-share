@@ -40,13 +40,13 @@ interface FileNode {
 const LIST_FILES_API = "/api/s3/list";
 const PRESIGN_UPLOAD_API = "/api/s3/presign";
 
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
+// const formatFileSize = (bytes: number) => {
+//   if (bytes === 0) return "0 Bytes";
+//   const k = 1024;
+//   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+//   const i = Math.floor(Math.log(bytes) / Math.log(k));
+//   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+// };
 
 const FileManagementApp = () => {
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -57,6 +57,7 @@ const FileManagementApp = () => {
   // const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [stagedFile, setStagedFile] = useState<File | null>(null);
   const [customFileName, setCustomFileName] = useState("");
+  const [customFileDirectory, setCustomFileDirectory] = useState("");
   const [showFileDialog, setShowFileDialog] = useState(false);
 
   const fetchFiles = useCallback(async () => {
@@ -71,6 +72,7 @@ const FileManagementApp = () => {
       const fileList: FileItem[] = await response.json();
       setFiles(fileList);
       setStatusMessage("Files loaded successfully.");
+      setTimeout(() => setStatusMessage(""), 3000);
     } catch (error) {
       console.error("Error fetching files:", error);
       setStatusMessage(
@@ -165,7 +167,11 @@ const FileManagementApp = () => {
   //   }
   // };
 
-  const handleUploadWithCustomName = async (file: File, fileName: string) => {
+  const handleUploadWithCustomName = async (
+    file: File,
+    fileName: string,
+    fileDirectory: string
+  ) => {
     setIsUploading(true);
     setStatusMessage(`Requesting upload URL for ${fileName}...`);
 
@@ -173,7 +179,7 @@ const FileManagementApp = () => {
       const presignResponse: PreSignResponse = await fetch(PRESIGN_UPLOAD_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName, fileType: file.type }),
+        body: JSON.stringify({ fileName, fileDirectory, fileType: file.type }),
       }).then((res) => {
         if (!res.ok)
           throw new Error(`Failed to get presign URL (Status: ${res.status})`);
@@ -364,6 +370,13 @@ const FileManagementApp = () => {
               </p>
               <input
                 type="text"
+                value={customFileDirectory}
+                onChange={(e) => setCustomFileDirectory(e.target.value)}
+                placeholder="Enter directory"
+                className="w-full border rounded px-3 py-2 mb-4"
+              />
+              <input
+                type="text"
                 value={customFileName}
                 onChange={(e) => setCustomFileName(e.target.value)}
                 placeholder="Enter filename"
@@ -380,7 +393,11 @@ const FileManagementApp = () => {
                   onClick={() => {
                     setShowFileDialog(false);
                     stagedFile &&
-                      handleUploadWithCustomName(stagedFile, customFileName);
+                      handleUploadWithCustomName(
+                        stagedFile,
+                        customFileName,
+                        customFileDirectory
+                      );
                   }}
                   className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >

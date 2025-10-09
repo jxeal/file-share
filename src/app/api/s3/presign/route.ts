@@ -12,17 +12,21 @@ const s3 = new AWS.S3({
 
 export async function POST(req: Request) {
   try {
-    const { fileName, fileType } = await req.json();
+    const { fileDirectory, fileName, fileType } = await req.json();
 
-    if (!fileName || !fileType) {
+    if (!fileName || !fileType || !fileDirectory) {
       return NextResponse.json(
-        { error: "Missing fileName or fileType" },
+        { error: "Missing fileName or fileType or fileDirectory" },
         { status: 400 }
       );
     }
 
+    const fileDir = fileDirectory.endsWith("/")
+      ? fileDirectory
+      : fileDirectory + "/";
+
     const bucket = process.env.AWS_S3_BUCKET!;
-    const key = `${fileName}-${Date.now()}`;
+    const key = `${fileDir}-${Date.now()}-${fileName}`;
 
     const uploadUrl = s3.getSignedUrl("putObject", {
       Bucket: bucket,
