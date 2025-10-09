@@ -6,14 +6,14 @@ import React, {
   useMemo,
 } from "react";
 import { FileText, Upload, Download, Loader } from "lucide-react";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogFooter,
-//   DialogClose,
-// } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface FileItem {
   key: string;
@@ -54,7 +54,10 @@ const FileManagementApp = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  // const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const [customFileName, setCustomFileName] = useState("");
+  const [showFileDialog, setShowFileDialog] = useState(false);
 
   const fetchFiles = useCallback(async () => {
     setIsLoading(true);
@@ -88,13 +91,13 @@ const FileManagementApp = () => {
     else setStatusMessage(`Error: No download URL available for ${file.key}`);
   };
 
-  const handlePreview = (file: FileItem) => {
-    if (file.downloadUrl) {
-      setPreviewFile(file); // Opens the modal/dialog
-    } else {
-      setStatusMessage(`Error: No download URL available for ${file.key}`);
-    }
-  };
+  // const handlePreview = (file: FileItem) => {
+  //   if (file.downloadUrl) {
+  //     setPreviewFile(file); // Opens the modal/dialog
+  //   } else {
+  //     setStatusMessage(`Error: No download URL available for ${file.key}`);
+  //   }
+  // };
 
   //   const handleDownloadFile = (file: FileItem) => {
   //     if (!file.downloadUrl) {
@@ -109,48 +112,96 @@ const FileManagementApp = () => {
   //     document.body.removeChild(link);
   //   };
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    setStagedFile(file);
+    setCustomFileName(file.name); // default value
+    setShowFileDialog(true);
+  };
+  //   const file = event.target.files?.[0];
+  //   if (!file) return;
+  //   setIsUploading(true);
+  //   setStatusMessage(`Requesting upload URL for ${file.name}...`);
+
+  //   try {
+  //     const presignResponse: PreSignResponse = await (async () => {
+  //       const response = await fetch(PRESIGN_UPLOAD_API, {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+  //       });
+  //       if (!response.ok)
+  //         throw new Error(
+  //           `Backend failed to generate pre-signed URL (Status: ${response.status}).`
+  //         );
+  //       return response.json();
+  //     })();
+
+  //     const { uploadUrl, key } = presignResponse;
+  //     setStatusMessage(`Uploading ${file.name} directly to S3 bucket...`);
+  //     const s3Response = await fetch(uploadUrl, {
+  //       method: "PUT",
+  //       body: file,
+  //       headers: { "Content-Type": file.type },
+  //     });
+  //     if (!s3Response.ok)
+  //       throw new Error(
+  //         `Direct S3 upload failed with status ${s3Response.status}. S3 Key: ${key}`
+  //       );
+  //     setStatusMessage(`Upload of ${file.name} successful!`);
+  //     await fetchFiles();
+  //   } catch (error) {
+  //     console.error("Upload Error:", error);
+  //     setStatusMessage(
+  //       `Upload failed: ${
+  //         (error as Error).message || "An unknown error occurred."
+  //       }`
+  //     );
+  //   } finally {
+  //     setIsUploading(false);
+  //     if (fileInputRef.current) fileInputRef.current.value = "";
+  //   }
+  // };
+
+  const handleUploadWithCustomName = async (file: File, fileName: string) => {
     setIsUploading(true);
-    setStatusMessage(`Requesting upload URL for ${file.name}...`);
+    setStatusMessage(`Requesting upload URL for ${fileName}...`);
 
     try {
-      const presignResponse: PreSignResponse = await (async () => {
-        const response = await fetch(PRESIGN_UPLOAD_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileName: file.name, fileType: file.type }),
-        });
-        if (!response.ok)
-          throw new Error(
-            `Backend failed to generate pre-signed URL (Status: ${response.status}).`
-          );
-        return response.json();
-      })();
+      const presignResponse: PreSignResponse = await fetch(PRESIGN_UPLOAD_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName, fileType: file.type }),
+      }).then((res) => {
+        if (!res.ok)
+          throw new Error(`Failed to get presign URL (Status: ${res.status})`);
+        return res.json();
+      });
 
       const { uploadUrl, key } = presignResponse;
-      setStatusMessage(`Uploading ${file.name} directly to S3 bucket...`);
+      setStatusMessage(`Uploading ${fileName} directly to S3...`);
+
       const s3Response = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
         headers: { "Content-Type": file.type },
       });
+
       if (!s3Response.ok)
         throw new Error(
-          `Direct S3 upload failed with status ${s3Response.status}. S3 Key: ${key}`
+          `S3 upload failed with status ${s3Response.status}. Key: ${key}`
         );
-      setStatusMessage(`Upload of ${file.name} successful!`);
+
+      setStatusMessage(`Upload of ${fileName} successful!`);
       await fetchFiles();
     } catch (error) {
       console.error("Upload Error:", error);
-      setStatusMessage(
-        `Upload failed: ${
-          (error as Error).message || "An unknown error occurred."
-        }`
-      );
+      setStatusMessage(`Upload failed: ${(error as Error).message}`);
     } finally {
       setIsUploading(false);
+      setStagedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -236,13 +287,13 @@ const FileManagementApp = () => {
       <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-xl p-6">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h1 className="text-3xl font-bold text-gray-800">S3 File Manager</h1>
-          <input
+          {/* <input
             type="file"
             ref={fileInputRef}
             onChange={handleUpload}
             disabled={isUploading}
             className="hidden"
-          />
+          /> */}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isLoading}
@@ -260,6 +311,14 @@ const FileManagementApp = () => {
               </>
             )}
           </button>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect} // <-- changed from handleUpload
+            disabled={isUploading}
+            className="hidden"
+          />
         </div>
 
         {statusMessage && (
@@ -295,6 +354,42 @@ const FileManagementApp = () => {
             )}
           </div>
         </div>
+
+        {showFileDialog && stagedFile && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-96">
+              <h2 className="text-lg font-semibold mb-4">Upload File</h2>
+              <p className="mb-2">
+                File type: <strong>{stagedFile.type || "unknown"}</strong>
+              </p>
+              <input
+                type="text"
+                value={customFileName}
+                onChange={(e) => setCustomFileName(e.target.value)}
+                placeholder="Enter filename"
+                className="w-full border rounded px-3 py-2 mb-4"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowFileDialog(false)}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowFileDialog(false);
+                    stagedFile &&
+                      handleUploadWithCustomName(stagedFile, customFileName);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                >
+                  Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* <Dialog
           open={!!previewFile}
