@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     const bucket = process.env.AWS_S3_BUCKET!;
-    const key = `uploads/${Date.now()}-${fileName}`;
+    const key = `files/${Date.now()}-${fileName}`;
 
     const uploadUrl = s3.getSignedUrl("putObject", {
       Bucket: bucket,
