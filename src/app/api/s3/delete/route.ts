@@ -39,10 +39,13 @@ export async function DELETE(req: Request) {
     await s3.deleteObject({ Bucket: bucket, Key: file.key }).promise();
 
     return NextResponse.json({ success: true, key: file.key }, { status: 200 });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Delete error:", err);
     return NextResponse.json(
-      { error: "Failed to delete file", details: err.message },
+      {
+        error: "Failed to delete file",
+        details: err instanceof Error ? err.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

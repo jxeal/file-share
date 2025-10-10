@@ -414,7 +414,7 @@ const FileManagementApp = () => {
                 <button
                   onClick={() => {
                     setShowFileDialog(false);
-                    stagedFile &&
+                    if (stagedFile)
                       handleUploadWithCustomName(
                         stagedFile,
                         customFileName,
