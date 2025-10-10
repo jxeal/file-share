@@ -1,0 +1,7 @@
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_0cy5kZXYk
+CLERK_SECRET_KEY=sk_test_fGZth
+
+AWS_REGION= ap-south-1              
+AWS_ACCESS_KEY_ID= (aws iam user access key)
+AWS_SECRET_ACCESS_KEY= (aws iam user access key password)
+AWS_S3_BUCKET= (bucket name)

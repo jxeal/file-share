@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,7 @@ export default function RootLayout({
             </div>
           </SignedOut>
           <SignedIn>{children}</SignedIn>
+          <Toaster position="top-right" richColors />
         </body>
       </html>
     </ClerkProvider>
