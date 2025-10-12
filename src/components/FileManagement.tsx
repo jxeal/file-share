@@ -13,8 +13,20 @@ import {
   FolderOpen,
   Folder,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
+import { Button } from "./ui/button";
 
 interface FileItem {
   key: string;
@@ -52,7 +64,7 @@ const formatFileSize = (bytes: number) => {
 
 const formatDate = (isoString: string) => {
   const date = new Date(isoString);
-  return date.toLocaleString(); // you can customize format if needed
+  return date.toLocaleString("en-GB"); // you can customize format if needed
 };
 
 const FileManagementApp = () => {
@@ -70,6 +82,9 @@ const FileManagementApp = () => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set()
   );
+  const [open, setOpen] = useState(true);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showTimeoutAlert, setShowTimeoutAlert] = useState(false);
   const { user } = useUser();
 
   const fetchFiles = useCallback(async () => {
@@ -97,6 +112,13 @@ const FileManagementApp = () => {
 
   useEffect(() => {
     fetchFiles();
+    const resetTimer = () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setShowTimeoutAlert(true);
+      }, 50 * 60 * 1000);
+    };
+    resetTimer();
   }, [fetchFiles]);
 
   const handleDownloadFile = (file: FileItem) => {
@@ -225,9 +247,9 @@ const FileManagementApp = () => {
         const isOpen = expandedFolders.has(nodePath);
 
         return (
-          <div key={nodePath} className="ml-4 mb-2">
+          <div key={nodePath} className="ml-4">
             <div
-              className="font-semibold text-gray-700 cursor-pointer select-none gap-x-2 flex"
+              className="font-semibold text-gray-700 cursor-pointer select-none gap-x-2 flex p-2"
               onClick={() => toggleFolder(nodePath)}
             >
               {isOpen ? (
@@ -251,7 +273,7 @@ const FileManagementApp = () => {
             className="flex items-center justify-between p-2 hover:bg-gray-50 rounded transition"
           >
             <div className="flex items-center space-x-2">
-              <FileText className="w-5 h-5 text-gray-500" />
+              <FileText className=" text-gray-500" />
               <span
                 className="truncate cursor-pointer text-blue-600 hover:underline"
                 onClick={() => setSelectedFile(node as FileItem)}
@@ -261,17 +283,44 @@ const FileManagementApp = () => {
             </div>
             <div className="flex items-center space-x-2">
               {node.size !== 0 && (
-                <button
+                <Button
                   onClick={() => handleDownloadFile(node as FileItem)}
-                  className="flex items-center space-x-1 px-2 py-1 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition"
+                  className="flex items-center space-x-1 px-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition"
                 >
                   <span>Open</span>
-                </button>
+                </Button>
               )}
               {user?.publicMetadata?.role === "admin" && (
-                <button onClick={() => handleDelete(node as FileItem)}>
-                  <Trash color="red" />
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="hover:bg-red-800"
+                    >
+                      <Trash />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete file?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to permanently delete{" "}
+                        <strong>{node.name}</strong>? This action cannot be
+                        undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(node as FileItem)}
+                        className="bg-red-600 hover:bg-red-800"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           </div>
@@ -290,11 +339,11 @@ const FileManagementApp = () => {
   );
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-8 font-inter">
+    <div className=" p-4 sm:p-8 font-inter">
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h1 className="text-3xl font-bold text-gray-800">S3 File Manager</h1>
-          <button
+          <h1 className="text-3xl font-bold text-gray-800">Data Repository</h1>
+          <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isLoading}
             className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 disabled:bg-indigo-400 disabled:cursor-not-allowed"
@@ -310,7 +359,7 @@ const FileManagementApp = () => {
                 <span>Upload File</span>
               </>
             )}
-          </button>
+          </Button>
 
           <input
             type="file"
@@ -358,9 +407,18 @@ const FileManagementApp = () => {
             <div className="border border-gray-200 rounded-lg p-4 basis-1/4">
               {selectedFile ? (
                 <div className="space-y-4">
-                  <h2 className="font-semibold text-lg">
-                    {selectedFile.key.split("/").pop()}
-                  </h2>
+                  <div className="flex">
+                    <h2 className="font-semibold text-lg">
+                      {selectedFile.key.split("/").pop()}
+                    </h2>
+                    <Button
+                      variant={"destructive"}
+                      onClick={() => setSelectedFile(null)}
+                      className="hover:bg-red-800"
+                    >
+                      X
+                    </Button>
+                  </div>
                   <div>
                     <strong>Size:</strong>{" "}
                     {formatFileSize(selectedFile.size || 0)}
@@ -370,12 +428,12 @@ const FileManagementApp = () => {
                     {formatDate(selectedFile.lastModified || "")}
                   </div>
                   {selectedFile.downloadUrl && (
-                    <button
+                    <Button
                       onClick={() => handleDownloadFile(selectedFile)}
                       className="flex items-center space-x-1 px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition"
                     >
                       <span>Open</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
               ) : null}
@@ -405,13 +463,13 @@ const FileManagementApp = () => {
                 className="w-full border rounded px-3 py-2 mb-4"
               />
               <div className="flex justify-end space-x-2">
-                <button
+                <Button
                   onClick={() => setShowFileDialog(false)}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => {
                     setShowFileDialog(false);
                     if (stagedFile)
@@ -424,10 +482,36 @@ const FileManagementApp = () => {
                   className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >
                   Upload
-                </button>
+                </Button>
               </div>
             </div>
           </div>
+        )}
+
+        {showTimeoutAlert && (
+          <AlertDialog open={open} onOpenChange={setOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Session Timeout</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You&apos;ve been inactive for too long. Please refresh the
+                  site to continue.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction
+                  onClick={() => {
+                    setOpen(false);
+                    setShowTimeoutAlert(false);
+                    window.location.reload();
+                  }}
+                  className="bg-teal-600 hover:bg-teal-800"
+                >
+                  Refresh Site
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>
