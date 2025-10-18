@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-const images = ["/bg1.jpeg", "/bg2.jpeg"];
+const images = [
+  "/bg1.jpeg",
+  "/bg2.jpeg",
+  "/bg3.jpeg",
+  "/bg4.jpeg",
+  "/bg5.jpeg",
+];
 
 export default function BackgroundSlideshow({
   children,
@@ -20,7 +26,7 @@ export default function BackgroundSlideshow({
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="">
       {images.map((src, i) => (
         <img
           key={i}

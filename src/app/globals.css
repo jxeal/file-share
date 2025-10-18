@@ -120,3 +120,9 @@
     @apply bg-background text-foreground;
   }
 }
+#header-bar {
+  height: 5vh;
+}
+#msdoc-renderer {
+  height: 95vh;
+}

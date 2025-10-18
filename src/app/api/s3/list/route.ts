@@ -20,7 +20,7 @@ export async function GET() {
         const downloadUrl = s3.getSignedUrl("getObject", {
           Bucket: bucket,
           Key: item.Key!,
-          Expires: 300, // 5 minutes
+          Expires: 60 * 10,
         });
 
         return {

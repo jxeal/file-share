@@ -116,7 +116,7 @@ const FileManagementApp = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         setShowTimeoutAlert(true);
-      }, 50 * 60 * 1000);
+      }, 10 * 60 * 1000);
     };
     resetTimer();
   }, [fetchFiles]);
@@ -283,12 +283,32 @@ const FileManagementApp = () => {
             </div>
             <div className="flex items-center space-x-2">
               {node.size !== 0 && (
-                <Button
-                  onClick={() => handleDownloadFile(node as FileItem)}
-                  className="flex items-center space-x-1 px-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition"
-                >
-                  <span>Open</span>
-                </Button>
+                <>
+                  <Button
+                    onClick={() => {
+                      const url = node.downloadUrl!;
+                      const isPdf = node.name.endsWith(".pdf");
+
+                      if (isPdf) {
+                        handleDownloadFile(node as FileItem);
+                      } else {
+                        window.open(
+                          `/preview?fileUrl=${encodeURIComponent(url)}`,
+                          "_blank"
+                        );
+                      }
+                    }}
+                    className="flex items-center space-x-1 px-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-700 transition"
+                  >
+                    <span>Open</span>
+                  </Button>
+                  <Button
+                    onClick={() => handleDownloadFile(node as FileItem)}
+                    className="flex items-center space-x-1 px-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+                  >
+                    <span>Download</span>
+                  </Button>
+                </>
               )}
               {user?.publicMetadata?.role === "admin" && (
                 <AlertDialog>
@@ -428,12 +448,32 @@ const FileManagementApp = () => {
                     {formatDate(selectedFile.lastModified || "")}
                   </div>
                   {selectedFile.downloadUrl && (
-                    <Button
-                      onClick={() => handleDownloadFile(selectedFile)}
-                      className="flex items-center space-x-1 px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition"
-                    >
-                      <span>Open</span>
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => {
+                          const url = selectedFile.downloadUrl!;
+                          const isPdf = selectedFile.key.endsWith(".pdf");
+
+                          if (isPdf) {
+                            handleDownloadFile(selectedFile);
+                          } else {
+                            window.open(
+                              `/preview?fileUrl=${encodeURIComponent(url)}`,
+                              "_blank"
+                            );
+                          }
+                        }}
+                        className="flex items-center space-x-1 px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition"
+                      >
+                        <span>Open</span>
+                      </Button>
+                      <Button
+                        onClick={() => handleDownloadFile(selectedFile)}
+                        className="flex items-center space-x-1 px-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+                      >
+                        <span>Download</span>
+                      </Button>
+                    </div>
                   )}
                 </div>
               ) : null}

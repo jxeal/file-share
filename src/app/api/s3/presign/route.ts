@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       Bucket: bucket,
       Key: key,
       ContentType: fileType,
-      Expires: 60 * 5, // 5 minutes
+      Expires: 60 * 10,
     });
 
     return NextResponse.json({ uploadUrl, key });
