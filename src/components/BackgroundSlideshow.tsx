@@ -26,7 +26,7 @@ export default function BackgroundSlideshow({
   }, []);
 
   return (
-    <div className="">
+    <div className="relative min-h-screen overflow-hidden">
       {images.map((src, i) => (
         <img
           key={i}
