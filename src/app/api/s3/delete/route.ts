@@ -4,10 +4,13 @@ import AWS from "aws-sdk";
 import { currentUser } from "@clerk/nextjs/server";
 
 const s3 = new AWS.S3({
-  region: process.env.AWS_REGION!,
+  endpoint: process.env.R2_ENDPOINT,
+  region: "auto",
+  signatureVersion: "v4",
+  s3ForcePathStyle: true,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -34,7 +37,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const bucket = process.env.AWS_S3_BUCKET!;
+    const bucket = process.env.R2_BUCKET!;
 
     await s3.deleteObject({ Bucket: bucket, Key: file.key }).promise();
 

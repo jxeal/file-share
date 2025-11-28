@@ -3,10 +3,13 @@ import { NextResponse } from "next/server";
 import AWS from "aws-sdk";
 
 const s3 = new AWS.S3({
-  region: process.env.AWS_REGION!,
+  endpoint: process.env.R2_ENDPOINT,
+  region: "auto",
+  signatureVersion: "v4",
+  s3ForcePathStyle: true,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -14,19 +17,18 @@ export async function POST(req: Request) {
   try {
     const { fileDirectory, fileName, fileType } = await req.json();
 
-    if (!fileName || !fileType || !fileDirectory) {
+    if (!fileName || !fileType) {
       return NextResponse.json(
-        { error: "Missing fileName or fileType or fileDirectory" },
+        { error: "Missing fileName or fileType" },
         { status: 400 }
       );
     }
 
-    const fileDir = fileDirectory.endsWith("/")
-      ? fileDirectory
-      : fileDirectory + "/";
+    const dir = fileDirectory?.trim();
+    const fileDir = dir ? (dir.endsWith("/") ? dir : dir + "/") : "";
 
-    const bucket = process.env.AWS_S3_BUCKET!;
-    const key = `${fileDir}-${Date.now()}-${fileName}`;
+    const bucket = process.env.R2_BUCKET!;
+    const key = `${fileDir}${Date.now()}-${fileName}`;
 
     const uploadUrl = s3.getSignedUrl("putObject", {
       Bucket: bucket,
