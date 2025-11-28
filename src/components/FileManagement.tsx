@@ -253,9 +253,9 @@ const FileManagementApp = () => {
               onClick={() => toggleFolder(nodePath)}
             >
               {isOpen ? (
-                <FolderOpen color="#FFEA00" />
+                <FolderOpen color="#FFEA00" fill="#FFFFFF" />
               ) : (
-                <Folder color="#FFEA00" />
+                <Folder color="#FFEA00" fill="#FFEA00" />
               )}{" "}
               {node.name}/
             </div>
@@ -270,12 +270,13 @@ const FileManagementApp = () => {
         return (
           <div
             key={node.key}
-            className="flex items-center justify-between p-2 hover:bg-gray-50 rounded transition"
+            className="flex items-center justify-between p-2 hover:bg-gray-50/40 rounded transition"
           >
-            <div className="flex items-center space-x-2">
-              <FileText className=" text-gray-500" />
+            <div className="flex items-center space-x-2 min-w-0">
+              <FileText className="text-gray-500 flex-shrink-0" />
+
               <span
-                className="truncate cursor-pointer text-blue-600 hover:underline"
+                className="truncate cursor-pointer text-blue-600 hover:underline min-w-0 max-w-full"
                 onClick={() => setSelectedFile(node as FileItem)}
               >
                 {node.name}
@@ -360,7 +361,7 @@ const FileManagementApp = () => {
 
   return (
     <div className=" p-4 sm:p-8 font-inter">
-      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
+      <div className="max-w-6xl mx-auto bg-white/70 backdrop-blur-md shadow-xl rounded-xl p-6">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h1 className="text-3xl font-bold text-gray-800">Data Repository</h1>
           <Button
@@ -424,7 +425,11 @@ const FileManagementApp = () => {
                 </div>
               )}
             </div>
-            <div className="border border-gray-200 rounded-lg p-4 basis-1/4">
+            <div
+              className={`border ${
+                selectedFile && "bg-gray-50/50"
+              } border-gray-200 rounded-lg p-4 basis-1/4`}
+            >
               {selectedFile ? (
                 <div className="space-y-4">
                   <div className="flex">
@@ -473,6 +478,40 @@ const FileManagementApp = () => {
                       >
                         <span>Download</span>
                       </Button>
+                      {user?.publicMetadata?.role === "admin" && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="hover:bg-red-800"
+                            >
+                              <Trash />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete file?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to permanently delete{" "}
+                                <strong>
+                                  {selectedFile.key.split("/").pop()}
+                                </strong>
+                                ? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(selectedFile)}
+                                className="bg-red-600 hover:bg-red-800"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   )}
                 </div>
@@ -519,6 +558,7 @@ const FileManagementApp = () => {
                         customFileDirectory
                       );
                   }}
+                  disabled={!customFileName.trim()}
                   className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >
                   Upload
