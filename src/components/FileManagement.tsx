@@ -270,7 +270,7 @@ const FileManagementApp = () => {
         return (
           <div
             key={node.key}
-            className="flex items-center justify-between p-2 hover:bg-gray-50/40 rounded transition"
+            className="flex items-center justify-between p-2 hover:bg-gray-50/50 rounded transition"
           >
             <div className="flex items-center space-x-2 min-w-0">
               <FileText className="text-gray-500 flex-shrink-0" />
@@ -521,8 +521,8 @@ const FileManagementApp = () => {
         </div>
 
         {showFileDialog && stagedFile && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-96">
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center rounded-xl z-50">
+            <div className="bg-white border-1 border-black p-6 rounded-lg w-96">
               <h2 className="text-lg font-semibold mb-4">Upload File</h2>
               <p className="mb-2">
                 File type: <strong>{stagedFile.type || "unknown"}</strong>
@@ -558,7 +558,7 @@ const FileManagementApp = () => {
                         customFileDirectory
                       );
                   }}
-                  disabled={!customFileName.trim()}
+                  // disabled={!customFileName.trim()}
                   className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >
                   Upload
