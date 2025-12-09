@@ -279,7 +279,7 @@ const FileManagementApp = () => {
                 className="truncate cursor-pointer text-blue-600 hover:underline min-w-0 max-w-full"
                 onClick={() => setSelectedFile(node as FileItem)}
               >
-                {node.name}
+                {node.name.slice(14)}
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -434,7 +434,7 @@ const FileManagementApp = () => {
                 <div className="space-y-4">
                   <div className="flex">
                     <h2 className="font-semibold text-lg">
-                      {selectedFile.key.split("/").pop()}
+                      {selectedFile.key.split("/").pop()?.slice(14)}
                     </h2>
                     <Button
                       variant={"destructive"}
