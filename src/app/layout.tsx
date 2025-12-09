@@ -31,14 +31,14 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {/* <SignedOut>
+          <SignedOut>
             <div className="min-h-screen min-w-screen flex items-center justify-center">
               <SignIn routing="hash" />
             </div>
           </SignedOut>
           <SignedIn>
-          </SignedIn> */}
-          <BackgroundSlideshow>{children}</BackgroundSlideshow>
+            <BackgroundSlideshow>{children}</BackgroundSlideshow>
+          </SignedIn>
           <Toaster position="top-right" richColors />
         </body>
       </html>
